@@ -3,7 +3,7 @@
     "name": ".url WebView Opener",
     "version": "1.0.0",
     "minAppVersion": "0.15.0",
-    "description": "Opens .url files in Obsidian's internal webview.",
+    "description": "Opens .url files in the internal webview.",
     "author": "Luc Marongiu",
     "authorUrl": "https://github.com/Kieirra",
     "isDesktopOnly": true
