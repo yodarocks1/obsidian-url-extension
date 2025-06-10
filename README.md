@@ -4,7 +4,7 @@
 
 ---
 
-![demo](images/screenshot-display.png)
+![demo](assets/screenshot-display.png)
 
 ## Installation
 
