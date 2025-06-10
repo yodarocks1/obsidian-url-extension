@@ -71,8 +71,8 @@ Configure in Settings > Community plugins > `.url WebView Opener`:
 
 | Version | Date | Notes |
 | --- | --- | --- |
-| `1.1.0` | 2023-08-27 | Add fullscreen mode and navigation buttons |
-| `1.0.0` | 2023-08-27 | Initial version |
+| `1.1.0` | 2025-06-10 | Add fullscreen mode and navigation buttons |
+| `1.0.0` | 2025-06-10 | Initial version |
 
 ## License
 
