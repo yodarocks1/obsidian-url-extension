@@ -18,7 +18,7 @@ Clone the plugin in your `.obsidian/plugins` directory:
 
 ```shell
 cd /path/to/your/vault/.obsidian/plugins
-git clone git@github.com:kieirra/obsidian-url-extension.git
+git clone https://github.com/Kieirra/obsidian-url-extension.git
 ```
 
 ### From source
