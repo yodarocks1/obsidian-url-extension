@@ -1,0 +1,75 @@
+/* URL Viewer Plugin - Scoped Styles */
+
+.url-viewer-container .view-content {
+    position: relative;
+    overflow: hidden !important;
+    padding: 0;
+    margin: 0;
+    height: 100%;
+}
+
+.url-viewer-container .view-content iframe {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    background: white;
+}
+
+.url-viewer-container .url-edit-container {
+    padding: 16px;
+    background: var(--background-secondary);
+    border-radius: 6px;
+    margin: 8px;
+}
+
+.url-viewer-container .url-textarea {
+    width: 100%;
+    height: 400px;
+    min-height: 300px;
+    background: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    color: var(--text-normal);
+    font-family: var(--font-monospace);
+    padding: 16px;
+    resize: vertical;
+    box-sizing: border-box;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.url-viewer-container .url-edit-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.url-viewer-container .url-btn {
+    padding: 6px 12px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    background: var(--interactive-normal);
+    color: var(--text-normal);
+    cursor: pointer;
+    font-size: 13px;
+    min-height: 28px;
+}
+
+.url-viewer-container .url-btn:hover {
+    background: var(--interactive-hover);
+}
+
+
+
+@media (max-width: 768px) {
+    .url-viewer-container .url-edit-container {
+        margin: 5px;
+        padding: 15px;
+    }
+} 
