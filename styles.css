@@ -1,75 +1,89 @@
 /* URL Viewer Plugin - Scoped Styles */
 
-.url-viewer-container .view-content {
-    position: relative;
-    overflow: hidden !important;
-    padding: 0;
-    margin: 0;
-    height: 100%;
+/* -- Normal mode -- */
+
+.url-webview-opener .view-header {
+    height: 32px !important;
 }
 
-.url-viewer-container .view-content iframe {
-    position: absolute !important;
-    top: 0;
-    left: 0;
+.url-webview-opener .view-header .view-actions {
+    gap: 4px;
+    margin-right: 4px;
+}
+
+.url-webview-opener .view-action {
+    width: 24px;
+    padding: 2px;
+}
+
+.url-webview-opener .view-content {
+    padding: 0 !important;
+}
+
+.url-webview-opener .view-content webview {
     width: 100%;
     height: 100%;
-    border: none;
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    background: white;
 }
 
-.url-viewer-container .url-edit-container {
-    padding: 16px;
-    background: var(--background-secondary);
-    border-radius: 6px;
-    margin: 8px;
+/* -- Edit mode -- */
+
+.url-webview-opener-edit {
+    margin: 36px;
 }
 
-.url-viewer-container .url-textarea {
+.url-webview-opener-edit .url-textarea {
     width: 100%;
-    height: 400px;
     min-height: 300px;
-    background: var(--background-primary);
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 4px;
-    color: var(--text-normal);
-    font-family: var(--font-monospace);
-    padding: 16px;
-    resize: vertical;
-    box-sizing: border-box;
-    font-size: 14px;
-    line-height: 1.5;
 }
 
-.url-viewer-container .url-edit-buttons {
+.url-webview-opener-edit .url-edit-buttons {
     display: flex;
     gap: 8px;
     margin-top: 12px;
 }
 
-.url-viewer-container .url-btn {
-    padding: 6px 12px;
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 4px;
-    background: var(--interactive-normal);
-    color: var(--text-normal);
+/* -- Fullscreen mode -- */
+
+.url-webview-opener.fullscreen-mode .view-header {
+    transition: transform 0.2s ease;
+    position: absolute;
+    top: 0;
+    width: 100%;
+}
+
+.url-webview-opener.fullscreen-mode.header-hidden .view-header {
+    transform: translateY(-100%);
+}
+
+.url-webview-opener.fullscreen-mode .view-header .view-header-title {
+    opacity: 0;
+}
+
+.url-webview-opener.fullscreen-mode .chevron-toggle {
+    position: absolute;
+    top: -6px;
+    rotate: -90deg;
+    left: 50%;
+    transform: translateX(-50%);
     cursor: pointer;
-    font-size: 13px;
-    min-height: 28px;
+    transition: opacity 0.2s ease;
+    z-index: 1001;
 }
 
-.url-viewer-container .url-btn:hover {
-    background: var(--interactive-hover);
+.url-webview-opener.fullscreen-mode .chevron-toggle:hover {
+    opacity: 1;
 }
 
+.url-webview-opener.fullscreen-mode.header-hidden  .chevron-toggle {
+    top: 2px;
+    rotate: 90deg;
+}
 
+.url-webview-opener.fullscreen-mode.header-hidden .view-content {
+    transform: translateY(0);
+}
 
-@media (max-width: 768px) {
-    .url-viewer-container .url-edit-container {
-        margin: 5px;
-        padding: 15px;
-    }
-} 
+.url-webview-opener.fullscreen-mode .view-content webview {
+    position: absolute;
+    top: 0;
+}

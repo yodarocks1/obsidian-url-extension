@@ -1,6 +1,6 @@
 # .url WebView Opener
 
-> A lightweight and minimalist Obsidian plugin to view, open, and edit `.url` files directly in Obsidian’s native webview.
+> A lightweight and minimalist Obsidian plugin to view, open, and edit `.url` files directly in Obsidian’s native webview. Perfect for users who want to keep web documents or webapps accessible inside Obsidian, while standard links still open in your browser. If you simply want all links to open in a webview, use the Webview Core Plugin instead.
 
 ---
 
@@ -25,7 +25,6 @@ git clone https://github.com/Kieirra/obsidian-url-extension.git
 
 Download the [latest release](https://github.com/kieirra/obsidian-url-extension/releases) and unzip it in the `.obsidian/plugins/automatic-table-of-contents` directory.
 
-
 ## Usage
 
 ### Create URL file
@@ -43,13 +42,20 @@ URL=https://example.com
 
 ### View and Edit
 
-- Click a `.url` file to open it in the Obsidian webview.
+- Click your `.url` file to open it in the Obsidian webview.
 - Use the edit button (top right) to modify the URL.
 - Use the open in browser button (top right) to launch the link in your default browser.
 
+### Features
+
+Configure in Settings > Community plugins > `.url WebView Opener`:
+
+- **Open in browser by default**: Automatically opens the link in your default browser when you click a `.url` file.
+- **Fullscreen mode**: Displays the webview in fullscreen for a more immersive experience, hiding the header bar. You can toggle the header bar back by clicking the chevron icon.
+
 ## Publish a new version
 
-- Build the plugin with `npm run build` (`--watch` during dev)
+- Build the plugin with `npm run build`
 - Push a commit with the new version number as message with:
   - The relevant changelog in `README.md`
   - The new version number in `manifest.json`
@@ -58,13 +64,14 @@ URL=https://example.com
 - Publish a [new GitHub release](https://github.com/kieirra/obsidian-url-extension/releases/new) with:
   - The version number as title
   - The changelog from `README.md` as description
-  - `main.js` and `manifest.json` from as attachments
+  - `main.js`, `styles.css` and `manifest.json` from as attachments
   - _Set as the latest release_ checked
 
 ## Changelog
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| `1.1.0` | 2023-08-27 | Add fullscreen mode and navigation buttons |
 | `1.0.0` | 2023-08-27 | Initial version |
 
 ## License

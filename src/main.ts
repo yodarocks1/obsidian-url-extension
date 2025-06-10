@@ -2,10 +2,12 @@ import { Plugin, WorkspaceLeaf, FileView, TFile, PluginSettingTab, App, Setting 
 
 interface UrlViewerSettings {
     openInBrowser: boolean;
+    fullscreenMode: boolean;
 }
 
 const DEFAULT_SETTINGS: UrlViewerSettings = {
-    openInBrowser: false
+    openInBrowser: false,
+    fullscreenMode: false
 }
 
 const VIEW_TYPE_WEB = "url-webview";
@@ -15,7 +17,7 @@ export default class UrlInternalViewerPlugin extends Plugin {
 
     async onload() {
         await this.loadSettings();
-        this.registerView(VIEW_TYPE_WEB, (leaf) => new UrlWebView(leaf, this.settings));
+        this.registerView(VIEW_TYPE_WEB, (leaf) => new UrlWebView(leaf, this));
         this.registerExtensions(["url"], VIEW_TYPE_WEB);
         this.addSettingTab(new UrlViewerSettingTab(this.app, this));
     }
@@ -30,16 +32,33 @@ export default class UrlInternalViewerPlugin extends Plugin {
 
     async saveSettings() {
         await this.saveData(this.settings);
+        this.refreshViews();
+    }
+
+    private refreshViews() {
+        this.app.workspace.iterateAllLeaves((leaf) => {
+            if (leaf.view instanceof UrlWebView) {
+                (leaf.view as UrlWebView).updateFullscreenMode();
+            }
+        });
     }
 }
 
 class UrlWebView extends FileView {
-    private settings: UrlViewerSettings;
+    private plugin: UrlInternalViewerPlugin;
     private isEditing: boolean = false;
+    private headerHidden: boolean = false;
+    private webviewEl: any = null;
+    private backActionEl: HTMLElement | null = null;
+    private forwardActionEl: HTMLElement | null = null;
 
-    constructor(leaf: WorkspaceLeaf, settings: UrlViewerSettings) {
+    constructor(leaf: WorkspaceLeaf, plugin: UrlInternalViewerPlugin) {
         super(leaf);
-        this.settings = settings;
+        this.plugin = plugin;
+    }
+
+    private get settings() {
+        return this.plugin.settings;
     }
 
     private extractUrl(content: string): string {
@@ -60,16 +79,32 @@ class UrlWebView extends FileView {
     }
 
     protected async onOpen(): Promise<void> {
-        this.containerEl.addClass("url-viewer-container");       
+        this.containerEl.addClass("url-webview-opener");
+        this.updateFullscreenMode();
         this.addAction("edit", "Edit URL", () => this.toggleEditMode());
         this.addAction("external-link", "Open in browser", () => this.openInBrowser());
+        this.addAction("refresh-cw", "Reload", () => this.webviewReload());
+        this.addAction("arrow-right", "Forward", () => this.webviewGoForward());
+        this.addAction("arrow-left", "Back", () => this.webviewGoBack());
+    }
+
+    updateFullscreenMode() {
+        if (this.settings.fullscreenMode) {
+            this.containerEl.addClass("fullscreen-mode");
+            this.headerHidden = true;
+            this.containerEl.addClass("header-hidden");
+        } else {
+            this.containerEl.removeClass("fullscreen-mode");
+            this.headerHidden = false;
+            this.containerEl.removeClass("header-hidden");
+        }
     }
 
     async onLoadFile(file: TFile): Promise<void> {
         const content = await this.app.vault.read(file);
+        const url = this.extractUrl(content);
         
         if (this.settings.openInBrowser) {
-            const url = this.extractUrl(content);
             window.open(url, "_blank");
             return;
         }
@@ -77,45 +112,92 @@ class UrlWebView extends FileView {
         if (this.isEditing) {
             this.showEditMode(file, content);
         } else {
-            const url = this.extractUrl(content);
             this.showViewMode(url);
         }
+    }
+
+    private updateActionStates() {
+        if (!this.webviewEl) return;
+        if (this.backActionEl && typeof this.webviewEl.canGoBack === "function") {
+            this.webviewEl.canGoBack().then((canGoBack: boolean) => {
+                if (this.backActionEl) this.backActionEl.toggleClass("is-disabled", !canGoBack);
+            });
+        }
+        if (this.forwardActionEl && typeof this.webviewEl.canGoForward === "function") {
+            this.webviewEl.canGoForward().then((canGoForward: boolean) => {
+                if (this.forwardActionEl) this.forwardActionEl.toggleClass("is-disabled", !canGoForward);
+            });
+        }
+    }
+
+    private webviewGoBack() {
+        if (this.webviewEl && typeof this.webviewEl.goBack === "function") this.webviewEl.goBack();
+    }
+    private webviewGoForward() {
+        if (this.webviewEl && typeof this.webviewEl.goForward === "function") this.webviewEl.goForward();
+    }
+    private webviewReload() {
+        if (this.webviewEl && typeof this.webviewEl.reload === "function") this.webviewEl.reload();
     }
 
     private showViewMode(url: string) {
         const container = this.containerEl.children[1];
         container.empty();
 
-        const iframe = container.createEl("iframe");
-        iframe.src = url;
-        iframe.style.width = "100%";
-        iframe.style.height = "100%";
-        iframe.style.border = "none";
-        iframe.style.margin = "0";
-        iframe.style.padding = "0";
-        iframe.style.overflow = "hidden";
-        iframe.setAttribute("sandbox", "allow-same-origin allow-scripts allow-forms allow-popups");
-        iframe.setAttribute("scrolling", "yes");
+        const webviewEl = document.createElement("webview") as any;
+        webviewEl.src = url;
+        webviewEl.setAttribute("style", "width:100%;height:100%;");
+        container.appendChild(webviewEl);
+        this.webviewEl = webviewEl;
+
+        // Récupération des actions pour pouvoir les activer/désactiver
+        const actions = this.containerEl.querySelectorAll('.view-action');
+        this.backActionEl = actions[0] as HTMLElement;
+        this.forwardActionEl = actions[1] as HTMLElement;
+
+        const updateNav = () => this.updateActionStates();
+        webviewEl.addEventListener("did-navigate", updateNav);
+        webviewEl.addEventListener("did-navigate-in-page", updateNav);
+        webviewEl.addEventListener("dom-ready", updateNav);
+
+        if (this.settings.fullscreenMode) {
+            const chevron = container.createEl("div", {
+                cls: "chevron-toggle",
+                text: "⟩"
+            });
+            chevron.onclick = () => this.toggleHeader();
+        }
+    }
+
+    private toggleHeader() {
+        this.headerHidden = !this.headerHidden;
+        if (this.headerHidden) {
+            this.containerEl.addClass("header-hidden");
+        } else {
+            this.containerEl.removeClass("header-hidden");
+        }
+        const chevron = this.containerEl.querySelector('.chevron-toggle');
+        if (chevron) chevron.textContent = "⟩";
     }
 
     private showEditMode(file: TFile, content: string) {
         const container = this.containerEl.children[1];
         container.empty();
 
-        const editContainer = container.createDiv("url-edit-container");
+        const editContainer = container.createDiv("url-webview-opener-edit");
         const textarea = editContainer.createEl("textarea", { cls: "url-textarea" });
         textarea.value = content;
 
         const btnContainer = editContainer.createDiv("url-edit-buttons");
         
-        const saveBtn = btnContainer.createEl("button", { text: "Save", cls: "url-btn" });
+        const saveBtn = btnContainer.createEl("button", { text: "Save", cls: "btn-edit" });
         saveBtn.onclick = async () => {
             await this.app.vault.modify(file, textarea.value);
             this.isEditing = false;
             await this.onLoadFile(file);
         };
 
-        const cancelBtn = btnContainer.createEl("button", { text: "Cancel", cls: "url-btn" });
+        const cancelBtn = btnContainer.createEl("button", { text: "Cancel", cls: "btn-edit" });
         cancelBtn.onclick = () => {
             this.isEditing = false;
             this.onLoadFile(file);
@@ -157,6 +239,16 @@ class UrlViewerSettingTab extends PluginSettingTab {
                 .setValue(this.plugin.settings.openInBrowser)
                 .onChange(async (value) => {
                     this.plugin.settings.openInBrowser = value;
+                    await this.plugin.saveSettings();
+                }));
+
+        new Setting(containerEl)
+            .setName('Fullscreen mode')
+            .setDesc('Hide toolbar and show floating navigation buttons for maximum space')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.fullscreenMode)
+                .onChange(async (value) => {
+                    this.plugin.settings.fullscreenMode = value;
                     await this.plugin.saveSettings();
                 }));
     }
