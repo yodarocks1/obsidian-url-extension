@@ -40,9 +40,6 @@ var UrlInternalViewerPlugin = class extends import_obsidian.Plugin {
     this.registerExtensions(["url"], VIEW_TYPE_WEB);
     this.addSettingTab(new UrlViewerSettingTab(this.app, this));
   }
-  onunload() {
-    this.app.workspace.detachLeavesOfType(VIEW_TYPE_WEB);
-  }
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
   }
@@ -120,31 +117,35 @@ var UrlWebView = class extends import_obsidian.FileView {
     }
   }
   updateActionStates() {
-    if (!this.webviewEl) return;
-    if (this.backActionEl && typeof this.webviewEl.canGoBack === "function") {
+    if (!isWebviewTag(this.webviewEl)) return;
+    if (this.backActionEl) {
       this.webviewEl.canGoBack().then((canGoBack) => {
         if (this.backActionEl) this.backActionEl.toggleClass("is-disabled", !canGoBack);
       });
     }
-    if (this.forwardActionEl && typeof this.webviewEl.canGoForward === "function") {
+    if (this.forwardActionEl) {
       this.webviewEl.canGoForward().then((canGoForward) => {
         if (this.forwardActionEl) this.forwardActionEl.toggleClass("is-disabled", !canGoForward);
       });
     }
   }
   webviewGoBack() {
-    if (this.webviewEl && typeof this.webviewEl.goBack === "function") this.webviewEl.goBack();
+    if (isWebviewTag(this.webviewEl)) this.webviewEl.goBack();
   }
   webviewGoForward() {
-    if (this.webviewEl && typeof this.webviewEl.goForward === "function") this.webviewEl.goForward();
+    if (isWebviewTag(this.webviewEl)) this.webviewEl.goForward();
   }
   webviewReload() {
-    if (this.webviewEl && typeof this.webviewEl.reload === "function") this.webviewEl.reload();
+    if (isWebviewTag(this.webviewEl)) this.webviewEl.reload();
   }
   showViewMode(url) {
     const container = this.containerEl.children[1];
     container.empty();
     const webviewEl = document.createElement("webview");
+    if (!isWebviewTag(webviewEl)) {
+      console.error("webviewEl is not a WebviewTag");
+      return;
+    }
     webviewEl.src = url;
     webviewEl.setAttribute("style", "width:100%;height:100%;");
     container.appendChild(webviewEl);
@@ -224,3 +225,6 @@ var UrlViewerSettingTab = class extends import_obsidian.PluginSettingTab {
     }));
   }
 };
+function isWebviewTag(el) {
+  return !!el && typeof el.reload === "function" && typeof el.goBack === "function" && typeof el.goForward === "function";
+}
