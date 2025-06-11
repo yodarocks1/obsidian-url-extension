@@ -12,6 +12,17 @@ const DEFAULT_SETTINGS: UrlViewerSettings = {
 
 const VIEW_TYPE_WEB = "url-webview";
 
+// Did not find the right type for webview in obsidian.d.ts
+// So i need this to by pass automatic scan for publishing
+type WebviewTag = HTMLElement & {
+    src: string;
+    reload: () => void;
+    goBack: () => void;
+    goForward: () => void;
+    canGoBack: () => Promise<boolean>;
+    canGoForward: () => Promise<boolean>;
+};
+
 export default class UrlInternalViewerPlugin extends Plugin {
     settings: UrlViewerSettings;
 
@@ -20,10 +31,6 @@ export default class UrlInternalViewerPlugin extends Plugin {
         this.registerView(VIEW_TYPE_WEB, (leaf) => new UrlWebView(leaf, this));
         this.registerExtensions(["url"], VIEW_TYPE_WEB);
         this.addSettingTab(new UrlViewerSettingTab(this.app, this));
-    }
-
-    onunload() {
-        this.app.workspace.detachLeavesOfType(VIEW_TYPE_WEB);
     }
 
     async loadSettings() {
@@ -48,7 +55,7 @@ class UrlWebView extends FileView {
     private plugin: UrlInternalViewerPlugin;
     private isEditing: boolean = false;
     private headerHidden: boolean = false;
-    private webviewEl: any = null;
+    private webviewEl: WebviewTag | null = null;
     private backActionEl: HTMLElement | null = null;
     private forwardActionEl: HTMLElement | null = null;
 
@@ -117,13 +124,13 @@ class UrlWebView extends FileView {
     }
 
     private updateActionStates() {
-        if (!this.webviewEl) return;
-        if (this.backActionEl && typeof this.webviewEl.canGoBack === "function") {
+        if (!isWebviewTag(this.webviewEl)) return;
+        if (this.backActionEl) {
             this.webviewEl.canGoBack().then((canGoBack: boolean) => {
                 if (this.backActionEl) this.backActionEl.toggleClass("is-disabled", !canGoBack);
             });
         }
-        if (this.forwardActionEl && typeof this.webviewEl.canGoForward === "function") {
+        if (this.forwardActionEl) {
             this.webviewEl.canGoForward().then((canGoForward: boolean) => {
                 if (this.forwardActionEl) this.forwardActionEl.toggleClass("is-disabled", !canGoForward);
             });
@@ -131,26 +138,30 @@ class UrlWebView extends FileView {
     }
 
     private webviewGoBack() {
-        if (this.webviewEl && typeof this.webviewEl.goBack === "function") this.webviewEl.goBack();
+        if (isWebviewTag(this.webviewEl)) this.webviewEl.goBack();
     }
     private webviewGoForward() {
-        if (this.webviewEl && typeof this.webviewEl.goForward === "function") this.webviewEl.goForward();
+        if (isWebviewTag(this.webviewEl)) this.webviewEl.goForward();
     }
     private webviewReload() {
-        if (this.webviewEl && typeof this.webviewEl.reload === "function") this.webviewEl.reload();
+        if (isWebviewTag(this.webviewEl)) this.webviewEl.reload();
     }
 
     private showViewMode(url: string) {
         const container = this.containerEl.children[1];
         container.empty();
 
-        const webviewEl = document.createElement("webview") as any;
+        const webviewEl = document.createElement("webview");
+        if (!isWebviewTag(webviewEl)) {
+            console.error("webviewEl is not a WebviewTag");
+            return;
+        }
+
         webviewEl.src = url;
         webviewEl.setAttribute("style", "width:100%;height:100%;");
         container.appendChild(webviewEl);
         this.webviewEl = webviewEl;
 
-        // Récupération des actions pour pouvoir les activer/désactiver
         const actions = this.containerEl.querySelectorAll('.view-action');
         this.backActionEl = actions[0] as HTMLElement;
         this.forwardActionEl = actions[1] as HTMLElement;
@@ -252,4 +263,13 @@ class UrlViewerSettingTab extends PluginSettingTab {
                     await this.plugin.saveSettings();
                 }));
     }
+}
+
+function isWebviewTag(el: unknown): el is WebviewTag {
+    return (
+        !!el &&
+        typeof (el as WebviewTag).reload === "function" &&
+        typeof (el as WebviewTag).goBack === "function" &&
+        typeof (el as WebviewTag).goForward === "function"
+    );
 }
