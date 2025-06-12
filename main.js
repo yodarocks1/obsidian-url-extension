@@ -214,7 +214,6 @@ var UrlViewerSettingTab = class extends import_obsidian.PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl("h2", { text: "URL Viewer Settings" });
     new import_obsidian.Setting(containerEl).setName("Open in browser by default").setDesc("Open URL files directly in browser instead of webview").addToggle((toggle) => toggle.setValue(this.plugin.settings.openInBrowser).onChange(async (value) => {
       this.plugin.settings.openInBrowser = value;
       await this.plugin.saveSettings();

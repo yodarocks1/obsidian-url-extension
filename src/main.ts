@@ -241,8 +241,6 @@ class UrlViewerSettingTab extends PluginSettingTab {
         const { containerEl } = this;
         containerEl.empty();
         
-        containerEl.createEl('h2', { text: 'URL Viewer Settings' });
-
         new Setting(containerEl)
             .setName('Open in browser by default')
             .setDesc('Open URL files directly in browser instead of webview')
