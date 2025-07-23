@@ -23,7 +23,7 @@ git clone https://github.com/Kieirra/obsidian-url-extension.git
 
 ### From source
 
-Download the [latest release](https://github.com/kieirra/obsidian-url-extension/releases) and unzip it in the `.obsidian/plugins/automatic-table-of-contents` directory.
+Download the [latest release](https://github.com/kieirra/obsidian-url-extension/releases) and unzip it in the `.obsidian/plugins/obsidian-url-extension` directory.
 
 ## Usage
 
