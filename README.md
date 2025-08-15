@@ -29,7 +29,19 @@ Download the [latest release](https://github.com/kieirra/obsidian-url-extension/
 
 ### Create URL file
 
-Create a `.url` file with content:
+You can create a `.url` file in three ways:
+- Ribbon icon (left bar)
+- Command palette: “Create .url file”
+- Folder context menu (right-click a folder) → "Create .url file"
+
+Location rules:
+- If a folder is selected in the file explorer: the file is created inside that folder.
+- Else if a file is selected: the file is created next to that file (same folder).
+- Else: the file is created in the parent folder of the active file; if none, at the vault root.
+
+Newly created `.url` files open directly in edit mode.
+
+You can write either a plain URL:
 ```
 https://example.com
 ```
@@ -45,6 +57,12 @@ URL=https://example.com
 - Click your `.url` file to open it in the Obsidian webview.
 - Use the edit button (top right) to modify the URL.
 - Use the open in browser button (top right) to launch the link in your default browser.
+
+Note: When a `.url` file is created via the plugin, edit mode takes precedence over “Open in browser by default” for that first open.
+
+### Automatic URL normalization
+
+If you type a URL without a scheme (e.g. `www.google.com`), the plugin automatically prepends `https://` when opening the link (`https://www.google.com`). If you include a scheme (`http://`, `https://`, etc.), it is respected as-is.
 
 ### Features
 
@@ -71,6 +89,7 @@ Configure in Settings > Community plugins > `.url WebView Opener`:
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| `1.2.0` | 2025-08-15 | Add ribbon and folder context-menu creation, open-newly-created in edit mode, and automatic `https://` normalization |
 | `1.1.3` | 2025-07-10 | Update manifest.json (minimal obsidian version supported) |
 | `1.1.2` | 2025-06-11 | Removed title from settings to comply with plugin guidelines |
 | `1.1.1` | 2025-06-11 | Fix issues to publish plugin |
