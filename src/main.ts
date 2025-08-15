@@ -1,4 +1,4 @@
-import { Plugin, WorkspaceLeaf, FileView, TFile, PluginSettingTab, App, Setting } from "obsidian";
+import { Plugin, WorkspaceLeaf, FileView, TFile, PluginSettingTab, App, Setting, normalizePath } from "obsidian";
 
 interface UrlViewerSettings {
     openInBrowser: boolean;
@@ -31,6 +31,24 @@ export default class UrlInternalViewerPlugin extends Plugin {
         this.registerView(VIEW_TYPE_WEB, (leaf) => new UrlWebView(leaf, this));
         this.registerExtensions(["url"], VIEW_TYPE_WEB);
         this.addSettingTab(new UrlViewerSettingTab(this.app, this));
+
+
+        this.addCommand({
+            id: "create-url-file",
+            name: "Create URL file",
+            callback: async () => {
+                const fileName = `URL ${Date.now()}.url`;
+                const content = `[InternetShortcut]\nURL=\n`;
+                const path = normalizePath(fileName);
+                const created = await this.app.vault.create(path, content);
+                const leaf = this.app.workspace.getLeaf(true);
+                await leaf.openFile(created);
+                const view = leaf.view;
+                if (view instanceof UrlWebView) {
+                    view.startEditing();
+                }
+            },
+        });
     }
 
     async loadSettings() {
@@ -74,7 +92,7 @@ class UrlWebView extends FileView {
             const match = content.match(/URL=(.+)/);
             if (match) url = match[1].trim();
         }
-        return url;
+        return this.normalizeUrl(url);
     }
 
     getViewType(): string {
@@ -111,14 +129,13 @@ class UrlWebView extends FileView {
         const content = await this.app.vault.read(file);
         const url = this.extractUrl(content);
         
-        if (this.settings.openInBrowser) {
-            window.open(url, "_blank");
-            return;
-        }
-
         if (this.isEditing) {
             this.showEditMode(file, content);
         } else {
+            if (this.settings.openInBrowser) {
+                window.open(url, "_blank");
+                return;
+            }
             this.showViewMode(url);
         }
     }
@@ -213,6 +230,19 @@ class UrlWebView extends FileView {
             this.isEditing = false;
             this.onLoadFile(file);
         };
+    }
+
+    private normalizeUrl(url: string): string {
+        const trimmed = url.trim();
+        if (!trimmed) return trimmed;
+        if (/^[a-zA-Z][a-zA-Z0-9+.+-]*:/.test(trimmed)) return trimmed;
+        const withoutSlashes = trimmed.replace(/^\/\//, "");
+        return `https://${withoutSlashes}`;
+    }
+
+    public startEditing() {
+        this.isEditing = true;
+        if (this.file) this.onLoadFile(this.file);
     }
 
     private toggleEditMode() {
