@@ -1,4 +1,4 @@
-import { Plugin, WorkspaceLeaf, FileView, TFile, PluginSettingTab, App, Setting, normalizePath } from "obsidian";
+import { Plugin, WorkspaceLeaf, FileView, TFile, PluginSettingTab, App, Setting, normalizePath, TFolder } from "obsidian";
 
 interface UrlViewerSettings {
     openInBrowser: boolean;
@@ -31,24 +31,7 @@ export default class UrlInternalViewerPlugin extends Plugin {
         this.registerView(VIEW_TYPE_WEB, (leaf) => new UrlWebView(leaf, this));
         this.registerExtensions(["url"], VIEW_TYPE_WEB);
         this.addSettingTab(new UrlViewerSettingTab(this.app, this));
-
-
-        this.addCommand({
-            id: "create-url-file",
-            name: "Create URL file",
-            callback: async () => {
-                const fileName = `URL ${Date.now()}.url`;
-                const content = `[InternetShortcut]\nURL=\n`;
-                const path = normalizePath(fileName);
-                const created = await this.app.vault.create(path, content);
-                const leaf = this.app.workspace.getLeaf(true);
-                await leaf.openFile(created);
-                const view = leaf.view;
-                if (view instanceof UrlWebView) {
-                    view.startEditing();
-                }
-            },
-        });
+        this.addCreateUrlFileShortcuts();
     }
 
     async loadSettings() {
@@ -66,6 +49,46 @@ export default class UrlInternalViewerPlugin extends Plugin {
                 (leaf.view as UrlWebView).updateFullscreenMode();
             }
         });
+    }
+
+    private addCreateUrlFileShortcuts() {
+        this.addRibbonIcon('link-2', 'Create .url file', async () => await this.createAndEditUrlFile());
+        
+        this.addCommand({
+            id: "create-url-file",
+            name: "Create .url file",
+            callback: async () => await this.createAndEditUrlFile(),
+        });
+
+        this.registerEvent(
+            this.app.workspace.on("file-menu", (menu, file, _source) => {
+                if (file instanceof TFolder) {
+                    menu.addItem((item) =>
+                        item
+                            .setTitle("Create .url file")
+                            .setIcon("link-2")
+                            .onClick(async () => await this.createAndEditUrlFile(file.path + "/URL " + Date.now() + ".url"))
+                    );
+                }
+            })
+        );
+    }
+
+    private async createAndEditUrlFile(path?: string) {
+        const fileName = `URL ${Date.now()}.url`;
+        const content = `[InternetShortcut]\nURL=\n`;
+        if (path == null) {
+            const activeFile = this.app.workspace.getActiveFile();
+            const parentFolder = this.app.fileManager.getNewFileParent(activeFile?.path ?? "");
+            path = normalizePath(`${parentFolder.path}/${fileName}`);
+        }
+        const created = await this.app.vault.create(path, content);
+        const leaf = this.app.workspace.getLeaf(true);
+        await leaf.openFile(created);
+        const view = leaf.view;
+        if (view instanceof UrlWebView) {
+            view.startEditing();
+        }
     }
 }
 
