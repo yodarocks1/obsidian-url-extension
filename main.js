@@ -88,7 +88,7 @@ URL=
     await leaf.openFile(created);
     const view = leaf.view;
     if (view instanceof UrlWebView) {
-      view.startEditing();
+      view.startEditing(true);
     }
   }
 };
@@ -100,6 +100,7 @@ var UrlWebView = class extends import_obsidian.FileView {
     this.webviewEl = null;
     this.backActionEl = null;
     this.forwardActionEl = null;
+    this.deleteOnCancelIfUntouched = false;
     this.plugin = plugin;
   }
   get settings() {
@@ -226,8 +227,19 @@ var UrlWebView = class extends import_obsidian.FileView {
       await this.onLoadFile(file);
     };
     const cancelBtn = btnContainer.createEl("button", { text: "Cancel", cls: "btn-edit" });
-    cancelBtn.onclick = () => {
+    cancelBtn.onclick = async () => {
+      if (this.deleteOnCancelIfUntouched) {
+        const currentContent = await this.app.vault.read(file);
+        if (this.isEmptyUrlContent(currentContent)) {
+          await this.app.vault.delete(file);
+          this.isEditing = false;
+          this.deleteOnCancelIfUntouched = false;
+          this.leaf.detach();
+          return;
+        }
+      }
       this.isEditing = false;
+      this.deleteOnCancelIfUntouched = false;
       this.onLoadFile(file);
     };
   }
@@ -238,9 +250,22 @@ var UrlWebView = class extends import_obsidian.FileView {
     const withoutSlashes = trimmed.replace(/^\/\//, "");
     return `https://${withoutSlashes}`;
   }
-  startEditing() {
+  startEditing(deleteOnCancelIfUntouched = false) {
     this.isEditing = true;
+    this.deleteOnCancelIfUntouched = deleteOnCancelIfUntouched;
     if (this.file) this.onLoadFile(this.file);
+  }
+  isEmptyUrlContent(content) {
+    var _a;
+    const trimmed = content.trim();
+    if (trimmed.length === 0) return true;
+    if (trimmed.includes("[InternetShortcut]")) {
+      const match = content.match(/URL=(.*)/);
+      if (!match) return true;
+      const value = ((_a = match[1]) != null ? _a : "").trim();
+      return value.length === 0;
+    }
+    return trimmed.length === 0;
   }
   toggleEditMode() {
     this.isEditing = !this.isEditing;

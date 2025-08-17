@@ -89,6 +89,7 @@ Configure in Settings > Community plugins > `.url WebView Opener`:
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| `1.2.1` | 2025-08-17 | Cancel on newly created `.url` deletes the empty file and closes the tab; Cancel on existing files simply exits edit mode |
 | `1.2.0` | 2025-08-15 | Add ribbon and folder context-menu creation, open-newly-created in edit mode, and automatic `https://` normalization |
 | `1.1.3` | 2025-07-10 | Update manifest.json (minimal obsidian version supported) |
 | `1.1.2` | 2025-06-11 | Removed title from settings to comply with plugin guidelines |

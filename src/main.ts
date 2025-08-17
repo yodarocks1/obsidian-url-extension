@@ -87,7 +87,7 @@ export default class UrlInternalViewerPlugin extends Plugin {
         await leaf.openFile(created);
         const view = leaf.view;
         if (view instanceof UrlWebView) {
-            view.startEditing();
+            view.startEditing(true);
         }
     }
 }
@@ -99,6 +99,7 @@ class UrlWebView extends FileView {
     private webviewEl: WebviewTag | null = null;
     private backActionEl: HTMLElement | null = null;
     private forwardActionEl: HTMLElement | null = null;
+    private deleteOnCancelIfUntouched: boolean = false;
 
     constructor(leaf: WorkspaceLeaf, plugin: UrlInternalViewerPlugin) {
         super(leaf);
@@ -249,8 +250,19 @@ class UrlWebView extends FileView {
         };
 
         const cancelBtn = btnContainer.createEl("button", { text: "Cancel", cls: "btn-edit" });
-        cancelBtn.onclick = () => {
+        cancelBtn.onclick = async () => {
+            if (this.deleteOnCancelIfUntouched) {
+                const currentContent = await this.app.vault.read(file);
+                if (this.isEmptyUrlContent(currentContent)) {
+                    await this.app.vault.delete(file);
+                    this.isEditing = false;
+                    this.deleteOnCancelIfUntouched = false;
+                    this.leaf.detach();
+                    return;
+                }
+            }
             this.isEditing = false;
+            this.deleteOnCancelIfUntouched = false;
             this.onLoadFile(file);
         };
     }
@@ -263,9 +275,22 @@ class UrlWebView extends FileView {
         return `https://${withoutSlashes}`;
     }
 
-    public startEditing() {
+    public startEditing(deleteOnCancelIfUntouched: boolean = false) {
         this.isEditing = true;
+        this.deleteOnCancelIfUntouched = deleteOnCancelIfUntouched;
         if (this.file) this.onLoadFile(this.file);
+    }
+
+    private isEmptyUrlContent(content: string): boolean {
+        const trimmed = content.trim();
+        if (trimmed.length === 0) return true;
+        if (trimmed.includes('[InternetShortcut]')) {
+            const match = content.match(/URL=(.*)/);
+            if (!match) return true;
+            const value = (match[1] ?? '').trim();
+            return value.length === 0;
+        }
+        return trimmed.length === 0;
     }
 
     private toggleEditMode() {
