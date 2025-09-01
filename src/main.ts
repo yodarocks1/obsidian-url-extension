@@ -165,22 +165,20 @@ class UrlWebView extends FileView {
 
     async onLoadFile(file: TFile): Promise<void> {
         const content = await this.app.vault.read(file);
-        const url = this.extractUrl(content);
-        
-        if (this.isEditing) {
-            this.showEditMode(file, content);
-        } else {
-            if (this.settings.openInBrowser) {
-                if (isValidUrl(url)) {
+        const url = this.extractUrl(content);      
+        setTimeout(() => {
+            if (this.isEditing || !isValidUrl(url)) {
+                this.showEditMode(file, content);
+            } else {
+                if (this.settings.openInBrowser) {
                     window.open(url, "_blank");
                     this.leaf.detach();
+                    return;
                 } else {
-                    this.showEditMode(file, content);
+                    this.showViewMode(url);
                 }
-                return;
             }
-            this.showViewMode(url);
-        }
+        }, 0);
     }
 
     private updateActionStates() {
@@ -297,7 +295,7 @@ class UrlWebView extends FileView {
     public startEditing(deleteOnCancelIfUntouched: boolean = false) {
         this.isEditing = true;
         this.deleteOnCancelIfUntouched = deleteOnCancelIfUntouched;
-        if (this.file) this.onLoadFile(this.file);
+        if (this.file != null) this.onLoadFile(this.file);
     }
 
     private isEmptyUrlContent(content: string): boolean {

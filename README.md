@@ -89,7 +89,8 @@ Configure in Settings > Community plugins > `.url WebView Opener`:
 
 | Version | Date | Notes |
 | --- | --- | --- |
-| `1.3.0` | 2025-08-19 | Add file context-menu action "Edit URL" and when "Open in browser by default" is enabled, automatically close the empty Obsidian tab after opening in the browser and fix the 'Failed to open' error |
+| `1.3.1` | 2025-09-01| Fix error when clicking on "Edit URL" that do not open the editor |
+| `1.3.0` | 2025-09-01 | Add file context-menu action "Edit URL" and when "Open in browser by default" is enabled, automatically close the empty Obsidian tab after opening in the browser and fix the 'Failed to open' error |
 | `1.2.2` | 2025-08-18 | Fix "Failed to open" when "Open in browser by default" is enable for new/empty url file |
 | `1.2.1` | 2025-08-17 | Cancel on newly created `.url` deletes the empty file and closes the tab; Cancel on existing files simply exits edit mode |
 | `1.2.0` | 2025-08-15 | Add ribbon and folder context-menu creation, open-newly-created in edit mode, and automatic `https://` normalization |

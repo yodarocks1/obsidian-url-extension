@@ -155,20 +155,19 @@ var UrlWebView = class extends import_obsidian.FileView {
   async onLoadFile(file) {
     const content = await this.app.vault.read(file);
     const url = this.extractUrl(content);
-    if (this.isEditing) {
-      this.showEditMode(file, content);
-    } else {
-      if (this.settings.openInBrowser) {
-        if (isValidUrl(url)) {
+    setTimeout(() => {
+      if (this.isEditing || !isValidUrl(url)) {
+        this.showEditMode(file, content);
+      } else {
+        if (this.settings.openInBrowser) {
           window.open(url, "_blank");
           this.leaf.detach();
+          return;
         } else {
-          this.showEditMode(file, content);
+          this.showViewMode(url);
         }
-        return;
       }
-      this.showViewMode(url);
-    }
+    }, 0);
   }
   updateActionStates() {
     if (!isWebviewTag(this.webviewEl)) return;
@@ -269,7 +268,7 @@ var UrlWebView = class extends import_obsidian.FileView {
   startEditing(deleteOnCancelIfUntouched = false) {
     this.isEditing = true;
     this.deleteOnCancelIfUntouched = deleteOnCancelIfUntouched;
-    if (this.file) this.onLoadFile(this.file);
+    if (this.file != null) this.onLoadFile(this.file);
   }
   isEmptyUrlContent(content) {
     var _a;
