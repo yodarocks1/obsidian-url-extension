@@ -68,6 +68,17 @@ var UrlInternalViewerPlugin = class extends import_obsidian.Plugin {
           menu.addItem(
             (item) => item.setTitle("Create .url file").setIcon("link-2").onClick(async () => await this.createAndEditUrlFile(file.path + "/URL " + Date.now() + ".url"))
           );
+        } else if (file instanceof import_obsidian.TFile && file.extension === "url") {
+          menu.addItem(
+            (item) => item.setTitle("Edit URL").setIcon("edit").onClick(async () => {
+              const leaf = this.app.workspace.getLeaf(true);
+              await leaf.openFile(file);
+              const view = leaf.view;
+              if (view instanceof UrlWebView) {
+                view.startEditing(false);
+              }
+            })
+          );
         }
       })
     );
@@ -148,7 +159,12 @@ var UrlWebView = class extends import_obsidian.FileView {
       this.showEditMode(file, content);
     } else {
       if (this.settings.openInBrowser) {
-        window.open(url, "_blank");
+        if (isValidUrl(url)) {
+          window.open(url, "_blank");
+          this.leaf.detach();
+        } else {
+          this.showEditMode(file, content);
+        }
         return;
       }
       this.showViewMode(url);
@@ -299,4 +315,12 @@ var UrlViewerSettingTab = class extends import_obsidian.PluginSettingTab {
 };
 function isWebviewTag(el) {
   return !!el && typeof el.reload === "function" && typeof el.goBack === "function" && typeof el.goForward === "function";
+}
+function isValidUrl(url) {
+  try {
+    new URL(url);
+    return true;
+  } catch (error) {
+    return false;
+  }
 }

@@ -69,6 +69,20 @@ export default class UrlInternalViewerPlugin extends Plugin {
                             .setIcon("link-2")
                             .onClick(async () => await this.createAndEditUrlFile(file.path + "/URL " + Date.now() + ".url"))
                     );
+                } else if (file instanceof TFile && file.extension === 'url') {
+                    menu.addItem((item) =>
+                        item
+                            .setTitle("Edit URL")
+                            .setIcon("edit")
+                            .onClick(async () => {
+                                const leaf = this.app.workspace.getLeaf(true);
+                                await leaf.openFile(file);
+                                const view = leaf.view;
+                                if (view instanceof UrlWebView) {
+                                    view.startEditing(false);
+                                }
+                            })
+                    );
                 }
             })
         );
@@ -157,7 +171,12 @@ class UrlWebView extends FileView {
             this.showEditMode(file, content);
         } else {
             if (this.settings.openInBrowser) {
-                window.open(url, "_blank");
+                if (isValidUrl(url)) {
+                    window.open(url, "_blank");
+                    this.leaf.detach();
+                } else {
+                    this.showEditMode(file, content);
+                }
                 return;
             }
             this.showViewMode(url);
@@ -348,4 +367,13 @@ function isWebviewTag(el: unknown): el is WebviewTag {
         typeof (el as WebviewTag).goBack === "function" &&
         typeof (el as WebviewTag).goForward === "function"
     );
+}
+
+function isValidUrl(url: string): boolean {
+    try {
+        new URL(url);
+        return true;
+    } catch (error) {
+        return false;
+    }
 }

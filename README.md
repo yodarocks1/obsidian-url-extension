@@ -54,9 +54,9 @@ URL=https://example.com
 
 ### View and Edit
 
-- Click your `.url` file to open it in the Obsidian webview.
-- Use the edit button (top right) to modify the URL.
-- Use the open in browser button (top right) to launch the link in your default browser.
+- File context menu (right-click a `.url` file) → "Edit URL"
+- Or open the `.url` file and click the edit icon (top right)
+- Use the "Open in browser" button (top right) to launch the link in your default browser.
 
 Note: When a `.url` file is created via the plugin, edit mode takes precedence over “Open in browser by default” for that first open.
 
@@ -89,6 +89,8 @@ Configure in Settings > Community plugins > `.url WebView Opener`:
 
 | Version | Date | Notes |
 | --- | --- | --- |
+| `1.3.0` | 2025-08-19 | Add file context-menu action "Edit URL" and when "Open in browser by default" is enabled, automatically close the empty Obsidian tab after opening in the browser and fix the 'Failed to open' error |
+| `1.2.2` | 2025-08-18 | Fix "Failed to open" when "Open in browser by default" is enable for new/empty url file |
 | `1.2.1` | 2025-08-17 | Cancel on newly created `.url` deletes the empty file and closes the tab; Cancel on existing files simply exits edit mode |
 | `1.2.0` | 2025-08-15 | Add ribbon and folder context-menu creation, open-newly-created in edit mode, and automatic `https://` normalization |
 | `1.1.3` | 2025-07-10 | Update manifest.json (minimal obsidian version supported) |
